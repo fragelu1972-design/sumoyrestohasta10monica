@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende Jugando: Sumas y Restas - Mundo Amigo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            warmBg: '#FFF9F2',
+                            cardBg: '#FFFFFF',
+                            primary: '#FF7E5F',
+                            secondary: '#FEB47B',
+                            accent: '#4ECDC4',
+                            yellow: '#FFD166',
+                            purple: '#9B51E0',
+                            green: '#06D6A0',
+                            text: '#2D3142'
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FFF9F2;
+            font-family: 'Fredoka', cursive, sans-serif;
+            color: #2D3142;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+        .btn-bounce:hover {
+            transform: scale(1.04);
+        }
+
+        .item-card {
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+        .item-card.counted {
+            transform: scale(1.18) rotate(6deg);
+            border-color: #06D6A0;
+            background-color: #E8FCDA;
+            box-shadow: 0 0 15px rgba(6, 214, 160, 0.6);
+        }
+
+        .item-card.disappearing {
+            transform: translateY(20px) scale(0.2) !important;
+            opacity: 0.15 !important;
+            filter: grayscale(0.8);
+        }
+
+        .realistic-hand-card {
+            background:
+                radial-gradient(circle at 50% 18%, rgba(255,255,255,.95) 0 12%, transparent 40%),
+                linear-gradient(180deg, #FFFFFF 0%, #FFF5ED 100%);
+            border: 3px solid #EBC5B0;
+            border-radius: 2.25rem;
+            padding: 1rem .8rem .75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow:
+                0 18px 34px -10px rgba(170, 92, 62, .24),
+                inset 0 2px 7px rgba(255,255,255,.95);
+            min-width: 250px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .svg-finger {
+            cursor: pointer;
+            transform-box: fill-box;
+            transform-origin: 50% 100%;
+            transition:
+                transform 0.45s cubic-bezier(0.34, 1.45, 0.64, 1),
+                opacity 0.35s ease,
+                filter 0.3s ease;
+        }
+
+        .svg-finger:hover {
+            filter: drop-shadow(0px 8px 12px rgba(200, 100, 50, 0.4));
+        }
+
+        /* Finger Up (Extended) */
+        .svg-finger.finger-up {
+            transform: translateY(0) scaleY(1) rotate(var(--rot, 0deg));
+            opacity: 1;
+            visibility: visible;
+            filter:
+                drop-shadow(0 3px 3px rgba(128, 66, 49, .12))
+                drop-shadow(0 7px 8px rgba(128, 66, 49, .12));
+        }
+
+        /* First Tap: Counted (Glowing Green Pop - Finger stays extended) */
+        .svg-finger.finger-counted {
+            filter: drop-shadow(0px 0px 16px #06D6A0) drop-shadow(0px 0px 8px #06D6A0) !important;
+            transform: translateY(-12px) scale(1.1) rotate(var(--rot, 0deg)) !important;
+        }
+
+        /* Second Tap: Folded Down onto Palm */
+        .svg-finger.finger-down {
+            transform: translateY(70px) scaleY(0.22) scaleX(0.92) rotate(var(--rot, 0deg)) !important;
+            opacity: 0.10 !important;
+            filter: saturate(.75) blur(.35px);
+            cursor: pointer;
+        }
+
+        /* Folded Knuckle Curl overlay on Palm */
+        .folded-knuckle {
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            cursor: pointer;
+        }
+        .folded-knuckle.show {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+        .folded-knuckle.hide {
+            opacity: 0 !important;
+            transform: scale(0.6) !important;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+        .balloon {
+            position: fixed;
+            bottom: -50px;
+            font-size: 3rem;
+            animation: floatUp 4s ease-in forwards;
+            z-index: 50;
+            pointer-events: none;
+        }
+    </style>
+<style>
+/* ===== Mejoras UX/pedagógicas ===== */
+:root {
+    --edu-amber: #f59e0b;
+    --edu-teal: #0d9488;
+    --edu-purple: #7c3aed;
+    --edu-green: #10b981;
+    --edu-rose: #f43f5e;
+    --edu-ink: #334155;
+}
+button, select {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+button:focus-visible, select:focus-visible {
+    outline: 4px solid rgba(124, 58, 237, .28);
+    outline-offset: 3px;
+}
+.edu-progress {
+    height: 10px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+.edu-progress > div {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    transition: width .45s ease;
+    background: linear-gradient(90deg, #f59e0b, #10b981);
+}
+.edu-stat {
+    min-width: 86px;
+    padding: .5rem .7rem;
+    border-radius: 16px;
+    background: rgba(255,255,255,.85);
+    border: 1px solid rgba(148,163,184,.22);
+    box-shadow: 0 5px 16px rgba(15,23,42,.06);
+    text-align: center;
+}
+.edu-stat strong {
+    display: block;
+    font-size: 1.15rem;
+    line-height: 1.1;
+}
+.edu-stat span {
+    display: block;
+    margin-top: .15rem;
+    font-size: .68rem;
+    color: #64748b;
+    font-weight: 700;
+}
+.hint-card {
+    animation: hintIn .28s ease both;
+}
+@keyframes hintIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.answer-correct {
+    animation: answerPop .5s ease both;
+}
+@keyframes answerPop {
+    0% { transform: scale(.9); }
+    55% { transform: scale(1.14); }
+    100% { transform: scale(1.06); }
+}
+.answer-wrong {
+    animation: shake .32s ease both;
+}
+@keyframes shake {
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+.level-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 800;
+    background: #fef3c7;
+    color: #92400e;
+}
+.streak-fire {
+    display: inline-block;
+    animation: firePulse 1s ease-in-out infinite alternate;
+}
+@keyframes firePulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.12); }
+}
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+}
+@media (max-width: 640px) {
+    .edu-stat { min-width: 74px; padding: .45rem .5rem; }
+    .edu-stat strong { font-size: 1rem; }
+    .edu-stat span { font-size: .6rem; }
+}
+</style>
+
+<style id="mobile-no-scroll-optimization">
+/* Optimización para teléfonos: prioriza que el ejercicio completo entre en pantalla */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100svh;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding:
+      max(6px, env(safe-area-inset-top))
+      max(7px, env(safe-area-inset-right))
+      max(7px, env(safe-area-inset-bottom))
+      max(7px, env(safe-area-inset-left));
+  }
+
+  .container, .game-container, main {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Cabecera más compacta */
+  header {
+    padding: 10px 12px !important;
+    margin-bottom: 8px !important;
+  }
+
+  header h1 {
+    font-size: clamp(1.15rem, 5.2vw, 1.55rem) !important;
+    line-height: 1.08 !important;
+    margin: 0 !important;
+  }
+
+  header p {
+    font-size: .78rem !important;
+    margin: 3px 0 0 !important;
+  }
+
+  /* Progreso/estadísticas: 2 columnas para ahorrar altura */
+  .stats, .stats-grid, .progress-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    margin: 5px 0 !important;
+  }
+
+  .stat-card {
+    min-height: 0 !important;
+    padding: 5px 7px !important;
+  }
+
+  .stat-card .value {
+    font-size: 1rem !important;
+  }
+
+  .stat-card .label {
+    font-size: .62rem !important;
+  }
+
+  /* Controles de nivel/tema en una fila flexible */
+  .controls, .level-selector, .theme-selector {
+    gap: 5px !important;
+    margin: 5px 0 !important;
+  }
+
+  .controls button, .level-selector button, .theme-selector button {
+    min-height: 40px !important;
+    padding: 7px 9px !important;
+    font-size: .78rem !important;
+  }
+
+  /* Tarjeta principal y ejercicio */
+  .exercise-card, .game-card, .activity-card {
+    padding: 9px !important;
+    margin: 6px 0 !important;
+  }
+
+  .exercise-title {
+    font-size: .78rem !important;
+    margin: 2px 0 4px !important;
+  }
+
+  .equation, .operation, .problem {
+    font-size: clamp(1.65rem, 9vw, 2.35rem) !important;
+    line-height: 1 !important;
+    margin: 5px 0 !important;
+  }
+
+  /* Manos: menos espacio vertical, manteniendo buena zona táctil */
+  .hands-container, .interactive-hands, .hands-area {
+    gap: 5px !important;
+    margin: 4px 0 !important;
+    padding: 2px !important;
+  }
+
+  .realistic-hand-card {
+    padding: 4px !important;
+    min-height: 0 !important;
+  }
+
+  .realistic-hand-card svg {
+    display: block;
+    width: min(100%, 190px) !important;
+    height: auto !important;
+    max-height: 145px !important;
+    margin: auto !important;
+  }
+
+  /* Botones de respuesta: grandes para tocar, pero compactos */
+  .answer-buttons, .answers, .options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin: 6px 0 !important;
+  }
+
+  .answer-buttons button, .answers button, .options-grid button {
+    min-height: 44px !important;
+    padding: 7px 5px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Mensajes y pistas ocupan solo lo necesario */
+  .hint, .hint-box, .feedback, .mascot-message, .message {
+    padding: 6px 8px !important;
+    margin: 4px 0 !important;
+    font-size: .74rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Botones inferiores */
+  .action-buttons, .navigation-buttons, .exercise-actions {
+    gap: 6px !important;
+    margin-top: 5px !important;
+  }
+
+  .action-buttons button, .navigation-buttons button, .exercise-actions button,
+  button {
+    min-height: 42px;
+  }
+
+  /* Evita alturas fijas que puedan provocar scroll */
+  .exercise-card, .game-card, .activity-card, .main-card,
+  .panel, .content {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  header {
+    padding: 7px 9px !important;
+    margin-bottom: 5px !important;
+  }
+
+  header h1 {
+    font-size: 1.08rem !important;
+  }
+
+  header p {
+    font-size: .7rem !important;
+  }
+
+  .stats, .stats-grid, .progress-stats {
+    gap: 3px !important;
+  }
+
+  .stat-card {
+    padding: 3px 5px !important;
+  }
+
+  .stat-card .value {
+    font-size: .9rem !important;
+  }
+
+  .stat-card .label {
+    font-size: .56rem !important;
+  }
+
+  .controls button, .level-selector button, .theme-selector button {
+    min-height: 36px !important;
+    padding: 5px 6px !important;
+    font-size: .7rem !important;
+  }
+
+  .exercise-card, .game-card, .activity-card {
+    padding: 6px !important;
+    margin: 4px 0 !important;
+  }
+
+  .equation, .operation, .problem {
+    font-size: clamp(1.45rem, 8.5vw, 2rem) !important;
+  }
+
+  .realistic-hand-card svg {
+    max-height: 125px !important;
+    width: min(100%, 165px) !important;
+  }
+
+  .answer-buttons, .answers, .options-grid {
+    gap: 4px !important;
+    margin: 4px 0 !important;
+  }
+
+  .answer-buttons button, .answers button, .options-grid button {
+    min-height: 42px !important;
+    font-size: .92rem !important;
+  }
+}
+
+/* En móviles muy bajos, compactamos aún más para evitar desplazamiento vertical. */
+@media (max-width: 600px) and (max-height: 740px) {
+  header p,
+  .hint, .hint-box {
+    display: none !important;
+  }
+
+  header {
+    padding: 5px 8px !important;
+  }
+
+  .realistic-hand-card svg {
+    max-height: 108px !important;
+  }
+
+  .exercise-card, .game-card, .activity-card {
+    padding: 5px !important;
+  }
+
+  .stats, .stats-grid, .progress-stats {
+    margin: 3px 0 !important;
+  }
+}
+</style>
+
+
+<style id="limit-10-note">
+.limit-10-note {
+  text-align: center;
+  font-size: .78rem;
+  font-weight: 700;
+  opacity: .82;
+  margin: 3px auto 6px;
+}
+</style>
+
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="w-full bg-white shadow-sm border-b-4 border-amber-200 p-4 sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchMode('home')">
+                <div class="w-12 h-12 bg-amber-400 text-white rounded-2xl flex items-center justify-center text-2xl shadow-md">
+                    <i class="fa-solid fa-face-smile"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-amber-900 leading-tight">Mundo Amigo</h1>
+<p class="limit-10-note">🔢 Operaciones del 0 al 10</p>
+                    <p class="text-xs md:text-sm text-amber-700 font-inter font-semibold">Sumas y Restas divertidas</p>
+                </div>
+            </div>
+
+            <!-- Mode Selector Navigation -->
+            <nav class="flex items-center gap-2">
+                <button onclick="switchMode('addition')" id="btn-mode-add" class="px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 btn-bounce shadow-sm">
+                    <i class="fa-solid fa-plus-circle text-xl text-amber-600"></i> Sumar
+                </button>
+                <button onclick="switchMode('subtraction')" id="btn-mode-sub" class="px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 btn-bounce shadow-sm">
+                    <i class="fa-solid fa-minus-circle text-xl text-amber-600"></i> Restar
+                </button>
+                <button onclick="switchMode('free')" id="btn-mode-free" class="px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 btn-bounce shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xl text-amber-600"></i> Práctica Libre
+                </button>
+            </nav>
+
+            <!-- Sound Toggle Button -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleSound()" id="sound-btn" class="w-11 h-11 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-xl shadow-sm hover:bg-teal-200 btn-bounce">
+                    <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    
+<!-- Panel de progreso -->
+<section id="progress-panel" class="max-w-6xl mx-auto px-4 pt-3" aria-label="Progreso del alumno">
+    <div class="bg-white/80 backdrop-blur rounded-3xl border border-slate-200/70 shadow-sm p-3 md:p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span id="level-pill" class="level-pill">⭐ Nivel 1 · Explorador</span>
+                <span id="streak-label" class="text-sm font-bold text-slate-600">Racha: 0</span>
+            </div>
+            <div class="flex gap-2">
+                <div class="edu-stat"><strong id="stat-correct">0</strong><span>Aciertos</span></div>
+                <div class="edu-stat"><strong id="stat-total">0</strong><span>Intentos</span></div>
+                <div class="edu-stat"><strong id="stat-stars">0</strong><span>Estrellas</span></div>
+            </div>
+        </div>
+        <div class="mt-3 flex items-center gap-3">
+            <div class="edu-progress flex-1" aria-label="Progreso del nivel"><div id="level-progress"></div></div>
+            <span id="level-progress-text" class="text-xs font-extrabold text-slate-500">0/5</span>
+        </div>
+    </div>
+</section>
+
+<main class="max-w-4xl mx-auto w-full p-4 flex-grow flex flex-col justify-center my-2">
+        
+        <!-- Interactive Mascot "Misi" -->
+        <div class="bg-white rounded-3xl p-4 md:p-6 shadow-md border-2 border-orange-100 mb-6 flex items-center gap-4 md:gap-6 relative overflow-hidden">
+            <div class="flex-shrink-0 text-center">
+                <div id="mascot-avatar" class="w-20 h-20 md:w-24 md:h-24 bg-teal-400 rounded-full flex items-center justify-center text-4xl md:text-5xl text-white shadow-lg border-4 border-white btn-bounce cursor-pointer" onclick="playMascotGreeting()">
+                    🐱
+                </div>
+            </div>
+            <div class="flex-grow">
+                <div class="bg-amber-50 rounded-2xl p-3 md:p-4 border border-amber-200 relative">
+                    <p id="mascot-text" class="text-lg md:text-xl font-medium text-slate-800 leading-snug">
+                        ¡Hola, amigo! Soy Misi. Toca cada dedito una vez para contarlo (¡brillará!), y tócalo otra vez para doblarlo.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home View -->
+        <section id="view-home" class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+            <div onclick="switchMode('addition')" class="bg-white p-6 rounded-3xl shadow-lg border-4 border-orange-200 hover:border-orange-400 cursor-pointer btn-bounce flex flex-col items-center text-center">
+                <div class="w-24 h-24 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-5xl mb-4">
+                    🖐 + 🖐
+                </div>
+                <h2 class="text-3xl font-bold text-orange-600 mb-2">¡Vamos a Sumar!</h2>
+                <p class="text-slate-600 font-inter text-base">Juntamos los deditos levantados para contar en voz alta. ¡Toca cada dedito!</p>
+            </div>
+
+            <div onclick="switchMode('subtraction')" class="bg-white p-6 rounded-3xl shadow-lg border-4 border-teal-200 hover:border-teal-400 cursor-pointer btn-bounce flex flex-col items-center text-center">
+                <div class="w-24 h-24 bg-teal-100 text-teal-500 rounded-full flex items-center justify-center text-5xl mb-4">
+                    🖐️ ➔ ✊
+                </div>
+                <h2 class="text-3xl font-bold text-teal-600 mb-2">¡Vamos a Restar!</h2>
+                <p class="text-slate-600 font-inter text-base">Toca un dedito para contarlo, y tócalo de nuevo para doblarlo hacia la palma.</p>
+            </div>
+        </section>
+
+        <section id="view-exercise" class="hidden flex-col gap-6">
+            
+            <!-- Theme / Sprite Selector -->
+            <div class="flex justify-center items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-orange-100">
+                <span class="text-sm font-semibold text-slate-500 font-inter">Elegir amiguitos:</span>
+                <button onclick="changeTheme('hands', this)" class="theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl bg-amber-50 border-amber-300" title="Manitas reales e interactivas">🖐️</button>
+                <button onclick="changeTheme('faces', this)" class="theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl border-transparent hover:bg-slate-50">😊</button>
+                <button onclick="changeTheme('stars', this)" class="theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl border-transparent hover:bg-slate-50">⭐</button>
+                <button onclick="changeTheme('music', this)" class="theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl border-transparent hover:bg-slate-50">🎵</button>
+                <button onclick="changeTheme('animals', this)" class="theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl border-transparent hover:bg-slate-50">🐶</button>
+            </div>
+
+            <!-- Main Interactive Workspace -->
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-orange-200 flex flex-col items-center text-center relative">
+                
+                <!-- Layout Switcher (Vertical / Horizontal) -->
+                <div class="flex items-center gap-2 mb-4 bg-amber-100/80 p-1.5 rounded-2xl">
+                    <button id="btn-layout-vert" onclick="toggleLayout('vertical')" class="px-4 py-1.5 rounded-xl font-bold text-sm bg-amber-400 text-white shadow-sm transition">
+                        <i class="fa-solid fa-arrows-up-down mr-1"></i> Formato Vertical
+                    </button>
+                    <button id="btn-layout-horiz" onclick="toggleLayout('horizontal')" class="px-4 py-1.5 rounded-xl font-bold text-sm text-amber-800 hover:bg-amber-200 transition">
+                        <i class="fa-solid fa-arrows-left-right mr-1"></i> Horizontal
+                    </button>
+                </div>
+
+                <!-- Vertical Math Equation Display -->
+                <div id="equation-vertical" class="flex flex-col items-end text-6xl md:text-7xl font-bold mb-6 text-slate-700 bg-amber-50 px-10 py-5 rounded-3xl border-2 border-amber-200 shadow-inner min-w-[200px]">
+                    <div id="vert-num1" class="text-orange-500 pr-2">3</div>
+                    <div class="flex items-center justify-between w-full border-b-4 border-slate-700 pb-2">
+                        <span id="vert-op-symbol" class="text-amber-500 mr-4 text-5xl md:text-6xl">+</span>
+                        <span id="vert-num2" class="text-teal-500 pr-2">2</span>
+                    </div>
+                    <div id="vert-target-symbol" class="text-purple-600 pt-2 pr-2 text-6xl md:text-7xl">?</div>
+                </div>
+
+                <!-- Horizontal Math Equation Display -->
+                <div id="equation-horizontal" class="hidden items-center justify-center gap-4 text-5xl md:text-7xl font-bold mb-6 text-slate-700 bg-amber-50 px-8 py-4 rounded-3xl border-2 border-amber-200">
+                    <span id="num1" class="text-orange-500">3</span>
+                    <span id="op-symbol" class="text-amber-500">+</span>
+                    <span id="num2" class="text-teal-500">2</span>
+                    <span class="text-slate-400">=</span>
+                    <span id="target-symbol" class="text-purple-600">?</span>
+                </div>
+
+                <!-- Object / Hands Container -->
+                <div class="w-full bg-orange-50/60 rounded-3xl p-4 md:p-6 mb-6 border-2 border-dashed border-orange-200 flex flex-col md:flex-row items-center justify-around gap-6 min-h-[260px]">
+                    
+                    <!-- Left Group -->
+                    <div class="flex flex-col items-center gap-2 w-full md:w-auto">
+                        <span class="text-sm font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full font-inter" id="group1-label">Mano Izquierda</span>
+                        <div id="container-group1" class="flex flex-wrap justify-center gap-3 max-w-[340px] min-h-[180px] items-center">
+                            <!-- Left items / hand inserted dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Operator Badge -->
+                    <div id="visual-op-badge" class="w-12 h-12 bg-amber-400 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-md my-auto">
+                        +
+                    </div>
+
+                    <!-- Right Group -->
+                    <div id="group2-wrapper" class="flex flex-col items-center gap-2 w-full md:w-auto">
+                        <span class="text-sm font-bold text-teal-600 bg-teal-100 px-3 py-1 rounded-full font-inter" id="group2-label">Mano Derecha</span>
+                        <div id="container-group2" class="flex flex-wrap justify-center gap-3 max-w-[340px] min-h-[180px] items-center">
+                            <!-- Right items / hand inserted dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice Answers -->
+                <div class="w-full">
+                    <p id="options-instruction" class="text-slate-600 font-inter font-semibold mb-3">Toca la respuesta correcta:</p>
+                    
+<div id="hint-area" class="max-w-2xl mx-auto mt-3 min-h-[52px]" aria-live="polite"></div>
+
+<div id="options-container" class="flex flex-wrap justify-center gap-4">
+                        <!-- Option buttons -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Exercise Button -->
+            <div class="flex justify-end">
+                <button id="btn-next" onclick="nextExercise()" class="hidden px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white text-2xl font-bold rounded-2xl shadow-lg btn-bounce items-center gap-3">
+                    Siguiente <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="view-free" class="hidden flex-col gap-6">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-purple-200 text-center">
+                <h2 class="text-2xl md:text-3xl font-bold text-purple-700 mb-2">Modo Creador de Sumas y Restas</h2>
+                <p class="text-slate-600 font-inter mb-6">Elige los números y practica a tu ritmo.</p>
+
+                <div class="flex flex-wrap items-center justify-center gap-4 mb-2">
+                    <div class="flex flex-col items-center">
+                        <label class="text-xs font-bold text-slate-500 mb-1 font-inter">Número 1</label>
+                        <select id="free-n1" class="text-2xl font-bold bg-amber-50 border-2 border-amber-300 rounded-2xl px-4 py-2 text-slate-700 focus:outline-none">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7" selected>7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <label class="text-xs font-bold text-slate-500 mb-1 font-inter">Acción</label>
+                        <select id="free-op" class="text-2xl font-bold bg-purple-50 border-2 border-purple-300 rounded-2xl px-4 py-2 text-purple-700 focus:outline-none">
+                            <option value="+">+</option>
+                            <option value="-" selected>-</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <label class="text-xs font-bold text-slate-500 mb-1 font-inter">Número 2</label>
+                        <select id="free-n2" class="text-2xl font-bold bg-teal-50 border-2 border-teal-300 rounded-2xl px-4 py-2 text-slate-700 focus:outline-none">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-end h-full pt-5">
+                        <button onclick="buildFreeExercise()" class="px-6 py-2.5 bg-purple-600 text-white font-bold rounded-2xl shadow-md btn-bounce hover:bg-purple-700">
+                            ¡Probar!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="w-full bg-amber-100/60 border-t border-amber-200 py-4 text-center font-inter text-slate-600 text-sm">
+        <p>Diseñado especialmente para favorecer el aprendizaje dulce, claro y motivador ❤️</p>
+    </footer>
+
+    <script>
+        // Global State Variables
+        let soundEnabled = true;
+        let audioCtx = null;
+        let currentMode = 'addition';
+        let currentTheme = 'hands';
+        let currentLayout = 'vertical';
+        let currentN1 = 3;
+        let currentN2 = 2;
+        let currentOp = '+';
+        let currentAnswer = 5;
+        let isAnswered = false;
+        let removedItemsCount = 0;
+
+        // Estado educativo persistente
+        const STORAGE_KEY = 'mundo-amigo-progreso-v2';
+        const LEVELS = [
+            { name: 'Explorador', max: 5, addMax: 5, subMax: 5 },
+            { name: 'Contador', max: 10, addMax: 10, subMax: 10 },
+            { name: 'Maestro de dedos', max: 10, addMax: 10, subMax: 10 },
+            { name: 'Supermatemático', max: 10, addMax: 10, subMax: 10 }
+        ];
+        let progress = loadProgress();
+        let currentHintStage = 0;
+        let lastWrongAnswers = new Set();
+
+        const mascotMessages = {
+            add: [
+                "¡Vamos a sumar! Toca cada dedito levantado para contar en voz alta.",
+                "¡Muy bien! Junta los deditos de la izquierda y la derecha para saber el total."
+            ],
+            sub: [
+                "¡Vamos a restar! Toca cada dedito una vez para contarlo (¡brillará!), y tócalo otra vez para doblarlo.",
+                "Primer toque para contar el dedito (brilla en verde), segundo toque para doblarlo. ¡Inténtalo!"
+            ],
+            success: [
+                "¡Genial! ¡Eres un súper campeón de las matemáticas!",
+                "¡Excelente trabajo! Lo has conseguido perfectamente.",
+                "¡Muy bien hecho! ¡Qué inteligente eres!"
+            ],
+            tryAgain: "¡Casi! Prueba a contar los deditos de nuevo con tu dedito."
+        };
+
+        const themeSprites = {
+            faces: ['😊', '😀', '😃', '😄', '😁'],
+            stars: ['⭐', '🌟', '✨', '💫', '🌠'],
+            music: ['🎵', '🎶', '🎼', '🎹', '🎷'],
+            animals: ['🐶', '🐱', '🐰', '🦊', '🐼']
+        };
+
+        // Web Audio API Helpers
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type = 'sine', duration = 0.25) {
+            if (!soundEnabled) return;
+            initAudio();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        function playCountSound(step) {
+            const scale = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25];
+            const freq = scale[(step - 1) % scale.length];
+            playTone(freq, 'sine', 0.3);
+        }
+
+        function playDisappearSound() {
+            playTone(220, 'triangle', 0.25);
+        }
+
+        function playReappearSound() {
+            playTone(440, 'sine', 0.25);
+        }
+
+        function playSuccessSound() {
+            if (!soundEnabled) return;
+            const notes = [261.63, 329.63, 392.00, 523.25];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playTone(freq, 'triangle', 0.3), idx * 120);
+            });
+        }
+
+        function playMascotGreeting() {
+            playTone(523.25, 'sine', 0.2);
+            setTimeout(() => playTone(659.25, 'sine', 0.2), 150);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const btn = document.getElementById('sound-btn');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                btn.className = 'w-11 h-11 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-xl shadow-sm hover:bg-teal-200 btn-bounce';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+                btn.className = 'w-11 h-11 bg-rose-100 text-rose-700 rounded-full flex items-center justify-center text-xl shadow-sm hover:bg-rose-200 btn-bounce';
+            }
+        }
+
+        
+        function loadProgress() {
+            const base = { correct: 0, total: 0, streak: 0, bestStreak: 0, stars: 0, level: 1, levelCorrect: 0, sumCorrect: 0, subCorrect: 0 };
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+                return { ...base, ...(saved || {}) };
+            } catch {
+                return base;
+            }
+        }
+
+        function saveProgress() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch {}
+        }
+
+        function currentLevelData() {
+            return LEVELS[Math.min(progress.level - 1, LEVELS.length - 1)];
+        }
+
+        function updateProgressUI() {
+            const level = currentLevelData();
+            document.getElementById('stat-correct')?.replaceChildren(String(progress.correct));
+            document.getElementById('stat-total')?.replaceChildren(String(progress.total));
+            document.getElementById('stat-stars')?.replaceChildren(String(progress.stars));
+            const streak = document.getElementById('streak-label');
+            if (streak) streak.innerHTML = progress.streak > 0 ? `<span class="streak-fire">🔥</span> Racha: ${progress.streak}` : 'Racha: 0';
+            const pill = document.getElementById('level-pill');
+            if (pill) pill.textContent = `⭐ Nivel ${progress.level} · ${level.name}`;
+            const pct = Math.min(100, (progress.levelCorrect / 5) * 100);
+            const bar = document.getElementById('level-progress');
+            if (bar) bar.style.width = `${pct}%`;
+            const txt = document.getElementById('level-progress-text');
+            if (txt) txt.textContent = `${progress.levelCorrect}/5`;
+        }
+
+        function recordAnswer(correct) {
+            progress.total++;
+            if (correct) {
+                progress.correct++;
+                progress.streak++;
+                progress.bestStreak = Math.max(progress.bestStreak, progress.streak);
+                progress.stars += progress.streak >= 5 ? 2 : 1;
+                progress.levelCorrect++;
+                if (currentOp === '+') progress.sumCorrect++;
+                else progress.subCorrect++;
+                if (progress.levelCorrect >= 5 && progress.level < LEVELS.length) {
+                    progress.level++;
+                    progress.levelCorrect = 0;
+                    updateMascot(`¡Has subido al nivel ${progress.level}! Cada vez eres más rápido pensando.`, '🏆');
+                }
+            } else {
+                progress.streak = 0;
+            }
+            saveProgress();
+            updateProgressUI();
+        }
+
+        function showHint(message, tone = 'amber') {
+            const area = document.getElementById('hint-area');
+            if (!area) return;
+            const cls = tone === 'green'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-amber-50 border-amber-200 text-amber-800';
+            area.innerHTML = `<div class="hint-card ${cls} border-2 rounded-2xl px-4 py-3 text-center font-bold text-sm md:text-base">💡 ${message}</div>`;
+        }
+
+        function clearHint() {
+            const area = document.getElementById('hint-area');
+            if (area) area.innerHTML = '';
+        }
+
+        function buildPedagogicalDistractors(answer) {
+            const candidates = new Set();
+            const deltas = [-2, -1, 1, 2];
+            deltas.forEach(d => {
+                const n = answer + d;
+                if (n >= 0) candidates.add(n);
+            });
+            if (currentOp === '+') {
+                candidates.add(Math.max(0, answer - currentN2));
+                candidates.add(answer + 1);
+            } else {
+                candidates.add(answer + currentN2);
+                candidates.add(Math.max(0, currentN1 - 1));
+            }
+            candidates.delete(answer);
+            const arr = Array.from(candidates).filter(n => Number.isFinite(n) && n >= 0);
+            while (arr.length < 2) arr.push(answer + arr.length + 1);
+            return [answer, ...arr.slice(0, 2)];
+        }
+
+        function speak(text) {
+            if (!soundEnabled || !('speechSynthesis' in window)) return;
+            try {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = .92;
+                utterance.pitch = 1.12;
+                speechSynthesis.speak(utterance);
+            } catch {}
+        }
+
+        function announceExercise() {
+            const verb = currentOp === '+' ? 'más' : 'menos';
+            speak(`${currentN1} ${verb} ${currentN2}. ¿Cuánto es?`);
+        }
+
+        function vibrate(pattern = 20) {
+            if (navigator.vibrate) navigator.vibrate(pattern);
+        }
+
+        function toggleReducedMotion() {
+            document.documentElement.classList.toggle('reduce-motion');
+        }
+
+        function levelBounds() {
+            return Math.min(10, currentLevelData().addMax);
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-exercise').classList.add('hidden');
+            document.getElementById('view-free').classList.add('hidden');
+
+            const addBtn = document.getElementById('btn-mode-add');
+            const subBtn = document.getElementById('btn-mode-sub');
+            const freeBtn = document.getElementById('btn-mode-free');
+
+            [addBtn, subBtn, freeBtn].forEach(b => {
+                b.className = 'px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200 btn-bounce shadow-sm';
+            });
+
+            if (mode === 'home') {
+                document.getElementById('view-home').classList.remove('hidden');
+                updateMascot("¡Hola! Elige qué quieres aprender hoy: Sumar o Restar.", '🐱');
+            } else if (mode === 'free') {
+                document.getElementById('view-free').classList.remove('hidden');
+                freeBtn.className = 'px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-purple-600 text-white shadow-md btn-bounce';
+                updateMascot("En el Modo Creador puedes elegir tus propios números para practicar.", '🎨');
+            } else {
+                document.getElementById('view-exercise').classList.remove('hidden');
+                document.getElementById('view-exercise').classList.add('flex');
+                if (mode === 'addition') {
+                    addBtn.className = 'px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-amber-500 text-white shadow-md btn-bounce';
+                    currentOp = '+';
+                } else {
+                    subBtn.className = 'px-4 py-2.5 rounded-2xl font-bold text-lg flex items-center gap-2 bg-teal-500 text-white shadow-md btn-bounce';
+                    currentOp = '-';
+                }
+                generateRandomExercise();
+            }
+        }
+
+        function toggleLayout(layout) {
+            currentLayout = layout;
+            const vertBtn = document.getElementById('btn-layout-vert');
+            const horizBtn = document.getElementById('btn-layout-horiz');
+
+            if (layout === 'vertical') {
+                document.getElementById('equation-vertical').classList.remove('hidden');
+                document.getElementById('equation-vertical').classList.add('flex');
+                document.getElementById('equation-horizontal').classList.add('hidden');
+                document.getElementById('equation-horizontal').classList.remove('flex');
+
+                vertBtn.className = 'px-4 py-1.5 rounded-xl font-bold text-sm bg-amber-400 text-white shadow-sm transition';
+                horizBtn.className = 'px-4 py-1.5 rounded-xl font-bold text-sm text-amber-800 hover:bg-amber-200 transition';
+            } else {
+                document.getElementById('equation-horizontal').classList.remove('hidden');
+                document.getElementById('equation-horizontal').classList.add('flex');
+                document.getElementById('equation-vertical').classList.add('hidden');
+                document.getElementById('equation-vertical').classList.remove('flex');
+
+                horizBtn.className = 'px-4 py-1.5 rounded-xl font-bold text-sm bg-amber-400 text-white shadow-sm transition';
+                vertBtn.className = 'px-4 py-1.5 rounded-xl font-bold text-sm text-amber-800 hover:bg-amber-200 transition';
+            }
+        }
+
+        function changeTheme(theme, button) {
+            currentTheme = theme;
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.className = 'theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl border-transparent hover:bg-slate-50';
+            });
+            if (button) button.className = 'theme-btn px-3 py-1.5 rounded-xl border-2 text-2xl bg-amber-50 border-amber-300';
+            renderExercise();
+        }
+
+        function levelBounds() {
+  // Todas las operaciones del juego se mantienen entre 0 y 10.
+  return { min: 0, max: 10 };
+}
+
+function generateRandomExercise() {
+            const max = Math.min(10, currentLevelData().addMax);
+
+            if (currentOp === '+') {
+                // Sumas siempre entre 1 y 10, incluido el resultado.
+                currentN1 = Math.floor(Math.random() * Math.max(1, max - 1)) + 1;
+                const maxN2 = Math.max(1, Math.min(10 - currentN1, max));
+                currentN2 = Math.floor(Math.random() * maxN2) + 1;
+                currentAnswer = currentN1 + currentN2;
+            } else {
+                // Restas siempre con minuendo <= 10 y resultado >= 0.
+                currentN1 = Math.floor(Math.random() * Math.max(1, max - 1)) + 2;
+                currentN1 = Math.min(10, currentN1);
+                currentN2 = Math.floor(Math.random() * (currentN1 - 1)) + 1;
+                currentAnswer = currentN1 - currentN2;
+            }
+
+            renderExercise();
+        }
+
+        function buildFreeExercise() {
+            currentN1 = Math.max(0, Math.min(10, parseInt(document.getElementById('free-n1').value) || 0));
+            currentN2 = Math.max(0, Math.min(10, parseInt(document.getElementById('free-n2').value) || 0));
+            currentOp = document.getElementById('free-op').value;
+
+            if (currentOp === '+') {
+                // En modo libre, la suma tampoco puede superar 10.
+                if (currentN1 + currentN2 > 10) {
+                    currentN2 = Math.max(0, 10 - currentN1);
+                }
+            } else {
+                // En resta, el primer número debe ser >= al segundo.
+                if (currentN1 < currentN2) {
+                    currentN2 = currentN1;
+                }
+            }
+
+            currentAnswer = currentOp === '+' ? currentN1 + currentN2 : currentN1 - currentN2;
+
+            document.getElementById('view-free').classList.add('hidden');
+            document.getElementById('view-exercise').classList.remove('hidden');
+            document.getElementById('view-exercise').classList.add('flex');
+
+            renderExercise();
+        }
+
+        function updateMascot(msg, emoji = '🐱') {
+            document.getElementById('mascot-text').innerText = msg;
+            document.getElementById('mascot-avatar').innerText = emoji;
+        }
+
+        function renderExercise() {
+            isAnswered = false;
+            removedItemsCount = 0;
+            document.getElementById('btn-next').classList.add('hidden');
+
+            document.getElementById('vert-num1').innerText = currentN1;
+            document.getElementById('vert-num2').innerText = currentN2;
+            document.getElementById('vert-op-symbol').innerText = currentOp;
+            document.getElementById('vert-target-symbol').innerText = '?';
+
+            document.getElementById('num1').innerText = currentN1;
+            document.getElementById('num2').innerText = currentN2;
+            document.getElementById('op-symbol').innerText = currentOp;
+            document.getElementById('target-symbol').innerText = '?';
+
+            document.getElementById('visual-op-badge').innerText = currentOp;
+
+            const label1 = document.getElementById('group1-label');
+            const label2 = document.getElementById('group2-label');
+
+            if (currentOp === '+') {
+                label1.innerText = 'Mano Izquierda';
+                label2.innerText = 'Mano Derecha';
+            } else {
+                if (currentN1 <= 5) {
+                    label1.innerText = `Tienes ${currentN1} dedito(s)`;
+                } else {
+                    label1.innerText = `Mano 1 (5 deditos)`;
+                    label2.innerText = `Mano 2 (${currentN1 - 5} dedito(s))`;
+                }
+            }
+
+            const c1 = document.getElementById('container-group1');
+            const c2 = document.getElementById('container-group2');
+
+            if (currentTheme === 'hands') {
+                renderInteractiveHandsSVG(c1, c2);
+            } else {
+                renderItemsGroup(c1, c2);
+            }
+
+            renderOptionButtons();
+
+            const msgArr = currentOp === '+' ? mascotMessages.add : mascotMessages.sub;
+            updateMascot(msgArr[Math.floor(Math.random() * msgArr.length)], '🐱');
+            clearHint();
+            currentHintStage = 0;
+            lastWrongAnswers.clear();
+            updateProgressUI();
+            setTimeout(announceExercise, 250);
+        }
+
+        function renderInteractiveHandsSVG(c1, c2) {
+            function generateRealisticHandSVG(isLeft, fingerStates, tagPrefix) {
+                /*
+                 * Mano SVG mejorada:
+                 * - Silueta de palma más anatómica y menos "geométrica".
+                 * - Dedos con tres falanges visuales, articulaciones suaves y ligera asimetría.
+                 * - Uñas con forma más natural y brillo especular.
+                 * - Sombras de contacto entre dedos y palma.
+                 * - Pliegues principales de la palma y eminencia tenar/hipotenar.
+                 * - Se mantienen exactamente los mismos IDs/clases para conservar la interacción.
+                 */
+                const skinLight = '#FFE9DA';
+                const skinMain = '#E7A27F';
+                const skinMid = '#D88B68';
+                const skinDark = '#B9684D';
+                const nail = '#FFF5EE';
+                const nailShade = '#EBC8B8';
+                const crease = '#A95E49';
+                const highlight = '#FFF9F5';
+
+                const leftFingersData = [
+                    { name:'Pulgar',  x:19,  y:105, w:38, h:77, rot:-34, d:'M 30 177 C 22 160, 18 143, 22 124 C 25 110, 33 103, 42 106 C 53 110, 56 124, 52 141 C 49 156, 48 169, 51 178 C 44 182, 36 181, 30 177 Z' },
+                    { name:'Índice', x:52,  y:34,  w:30, h:104, rot:-8, d:'M 56 135 C 53 116, 51 88, 53 61 C 54 43, 59 32, 67 31 C 77 30, 82 39, 82 55 L 81 111 C 81 125, 77 135, 72 140 Z' },
+                    { name:'Medio',   x:84,  y:20,  w:32, h:118, rot:0,  d:'M 88 137 C 86 110, 85 78, 87 47 C 88 28, 93 18, 101 18 C 111 18, 116 28, 116 47 L 115 109 C 115 127, 111 138, 105 142 Z' },
+                    { name:'Anular', x:118, y:30,  w:30, h:106, rot:8,  d:'M 120 137 C 119 112, 118 80, 120 55 C 121 38, 126 28, 134 29 C 143 30, 148 39, 148 56 L 147 111 C 147 127, 143 137, 137 140 Z' },
+                    { name:'Meñique',x:151, y:56,  w:27, h:82, rot:18, d:'M 151 136 C 151 116, 151 94, 153 76 C 155 62, 159 54, 166 54 C 174 54, 178 62, 178 75 L 176 119 C 176 131, 172 138, 166 141 Z' }
+                ];
+
+                const rightFingersData = [
+                    { name:'Meñique',x:24,  y:56,  w:27, h:82, rot:-18,d:'M 51 136 C 51 116, 51 94, 49 76 C 47 62, 43 54, 36 54 C 28 54, 24 62, 24 75 L 26 119 C 26 131, 30 138, 36 141 Z' },
+                    { name:'Anular', x:54,  y:30,  w:30, h:106,rot:-8, d:'M 82 137 C 83 112, 84 80, 82 55 C 81 38, 76 28, 68 29 C 59 30, 54 39, 54 56 L 55 111 C 55 127, 59 137, 65 140 Z' },
+                    { name:'Medio',  x:86,  y:20,  w:32, h:118,rot:0,  d:'M 112 137 C 114 110, 115 78, 113 47 C 112 28, 107 18, 99 18 C 89 18, 84 28, 84 47 L 85 109 C 85 127, 89 138, 95 142 Z' },
+                    { name:'Índice', x:120, y:34,  w:30, h:104,rot:8,  d:'M 144 135 C 147 116, 149 88, 147 61 C 146 43, 141 32, 133 31 C 123 30, 118 39, 118 55 L 119 111 C 119 125, 123 135, 128 140 Z' },
+                    { name:'Pulgar', x:151, y:105, w:38, h:77, rot:34, d:'M 174 177 C 182 160, 186 143, 182 124 C 179 110, 171 103, 162 106 C 151 110, 148 124, 152 141 C 155 156, 156 169, 153 178 C 160 182, 168 181, 174 177 Z' }
+                ];
+
+                const fingers = isLeft ? leftFingersData : rightFingersData;
+
+                let svgFingersHTML = '';
+                let foldedKnucklesHTML = '';
+
+                fingers.forEach((f, idx) => {
+                    const isUp = fingerStates[idx];
+                    const stateClass = isUp ? 'finger-up' : 'finger-down';
+                    const elementId = `${tagPrefix}-svg-finger-${idx}`;
+                    const knuckleId = `${tagPrefix}-knuckle-${idx}`;
+                    const nailCx = isLeft
+                        ? f.x + f.w * 0.54
+                        : f.x + f.w * 0.46;
+
+                    svgFingersHTML += `
+                        <g id="${elementId}" class="svg-finger ${stateClass}" style="--rot:${f.rot}deg;" data-index="${idx}">
+                            <path d="${f.d}" fill="#9D5A42" opacity=".22" transform="translate(2.5 5)" />
+                            <path d="${f.d}" fill="url(#skin-${tagPrefix})" stroke="${skinDark}" stroke-width="2.1" stroke-linejoin="round"/>
+
+                            <!-- Luz suave sobre el dedo -->
+                            <path d="${f.d}" fill="url(#finger-light-${tagPrefix})" opacity=".55"/>
+
+                            <!-- Pliegues de las falanges -->
+                            <path d="M ${f.x+5} ${f.y+38}
+                                     C ${f.x+f.w*.28} ${f.y+42}, ${f.x+f.w*.72} ${f.y+42}, ${f.x+f.w-5} ${f.y+38}"
+                                  stroke="${crease}" stroke-width="1.35" fill="none" opacity=".58" stroke-linecap="round"/>
+                            <path d="M ${f.x+6} ${f.y+61}
+                                     C ${f.x+f.w*.3} ${f.y+64}, ${f.x+f.w*.7} ${f.y+64}, ${f.x+f.w-6} ${f.y+61}"
+                                  stroke="${crease}" stroke-width="1.15" fill="none" opacity=".42" stroke-linecap="round"/>
+
+                            <!-- Uña -->
+                            <path d="M ${nailCx-f.w*.19} ${f.y+7}
+                                     C ${nailCx-f.w*.17} ${f.y+1}, ${nailCx+f.w*.17} ${f.y+1}, ${nailCx+f.w*.19} ${f.y+7}
+                                     C ${nailCx+f.w*.18} ${f.y+16}, ${nailCx+f.w*.12} ${f.y+20}, ${nailCx} ${f.y+21}
+                                     C ${nailCx-f.w*.12} ${f.y+20}, ${nailCx-f.w*.18} ${f.y+16}, ${nailCx-f.w*.19} ${f.y+7} Z"
+                                  fill="url(#nail-${tagPrefix})" stroke="${nailShade}" stroke-width="1.15"/>
+                            <path d="M ${nailCx-f.w*.11} ${f.y+5} Q ${nailCx} ${f.y+2} ${nailCx+f.w*.11} ${f.y+5}"
+                                  stroke="${highlight}" stroke-width="1.4" fill="none" opacity=".9" stroke-linecap="round"/>
+                        </g>
+                    `;
+
+                    foldedKnucklesHTML += `
+                        <g id="${knuckleId}" class="folded-knuckle ${isUp ? 'hide' : 'show'}">
+                            <ellipse cx="${f.x + f.w/2}" cy="139" rx="${Math.max(8, f.w/2.25)}" ry="10"
+                                     fill="url(#skin-${tagPrefix})" stroke="${skinDark}" stroke-width="1.7"/>
+                            <path d="M ${f.x+6} 138 Q ${f.x+f.w/2} 143 ${f.x+f.w-6} 138"
+                                  stroke="${crease}" stroke-width="1.3" fill="none" opacity=".65" stroke-linecap="round"/>
+                            <ellipse cx="${f.x + f.w*.42}" cy="135" rx="${Math.max(3, f.w*.12)}" ry="2.5"
+                                     fill="${highlight}" opacity=".28"/>
+                        </g>
+                    `;
+                });
+
+                return `
+                    <div class="realistic-hand-card">
+                        <svg viewBox="0 0 205 250" class="w-48 h-56 md:w-56 md:h-64 overflow-visible" aria-label="${isLeft ? 'Mano izquierda' : 'Mano derecha'}">
+                            <defs>
+                                <linearGradient id="skin-${tagPrefix}" x1="15%" y1="5%" x2="85%" y2="100%">
+                                    <stop offset="0%" stop-color="${skinLight}"/>
+                                    <stop offset="42%" stop-color="${skinMain}"/>
+                                    <stop offset="78%" stop-color="${skinMid}"/>
+                                    <stop offset="100%" stop-color="${skinDark}"/>
+                                </linearGradient>
+
+                                <linearGradient id="finger-light-${tagPrefix}" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".32"/>
+                                    <stop offset="42%" stop-color="#FFFFFF" stop-opacity="0"/>
+                                    <stop offset="100%" stop-color="#7E3F32" stop-opacity=".18"/>
+                                </linearGradient>
+
+                                <radialGradient id="palm-${tagPrefix}" cx="46%" cy="43%" r="66%">
+                                    <stop offset="0%" stop-color="#FFEFE6"/>
+                                    <stop offset="38%" stop-color="${skinLight}"/>
+                                    <stop offset="73%" stop-color="${skinMain}"/>
+                                    <stop offset="100%" stop-color="${skinDark}"/>
+                                </radialGradient>
+
+                                <linearGradient id="nail-${tagPrefix}" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFFFFF"/>
+                                    <stop offset="65%" stop-color="${nail}"/>
+                                    <stop offset="100%" stop-color="${nailShade}"/>
+                                </linearGradient>
+
+                                <filter id="soft-shadow-${tagPrefix}" x="-30%" y="-30%" width="160%" height="170%">
+                                    <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#7E4637" flood-opacity=".18"/>
+                                </filter>
+                            </defs>
+
+                            <!-- Sombra bajo la mano -->
+                            <ellipse cx="103" cy="236" rx="57" ry="8" fill="#7E4637" opacity=".12"/>
+
+                            <!-- Dedos detrás de la palma -->
+                            <g class="hand-fingers">${svgFingersHTML}</g>
+
+                            <!-- Palma y muñeca -->
+                            <g class="hand-palm" filter="url(#soft-shadow-${tagPrefix})">
+                                <path d="M 67 201 C 67 212, 64 222, 62 236
+                                         L 144 236 C 142 223, 139 212, 138 201 Z"
+                                      fill="url(#skin-${tagPrefix})" stroke="${skinDark}" stroke-width="2.1"/>
+
+                                <path d="M 31 118
+                                         C 26 104, 35 94, 49 99
+                                         C 63 104, 71 105, 82 102
+                                         C 98 97, 119 98, 132 103
+                                         C 145 108, 152 104, 163 99
+                                         C 177 93, 185 104, 177 120
+                                         C 171 132, 174 144, 170 160
+                                         C 165 180, 153 202, 137 211
+                                         C 119 218, 84 218, 67 211
+                                         C 50 204, 39 187, 34 168
+                                         C 30 152, 34 135, 31 118 Z"
+                                      fill="url(#palm-${tagPrefix})" stroke="${skinDark}" stroke-width="2.5" stroke-linejoin="round"/>
+
+                                <!-- Eminencia tenar -->
+                                <path d="M 44 124 C 59 128, 66 145, 65 168 C 64 185, 70 196, 82 207"
+                                      fill="none" stroke="${crease}" stroke-width="3.2" opacity=".38" stroke-linecap="round"/>
+
+                                <!-- Línea de vida -->
+                                <path d="M 47 127 C 58 139, 68 150, 73 168 C 78 184, 87 196, 100 205"
+                                      fill="none" stroke="${crease}" stroke-width="2.1" opacity=".55" stroke-linecap="round"/>
+
+                                <!-- Línea de la cabeza -->
+                                <path d="M 54 158 C 78 166, 111 169, 148 156"
+                                      fill="none" stroke="${crease}" stroke-width="2" opacity=".48" stroke-linecap="round"/>
+
+                                <!-- Línea de muñeca -->
+                                <path d="M 73 205 C 94 212, 117 212, 135 204"
+                                      fill="none" stroke="${crease}" stroke-width="1.8" opacity=".38" stroke-linecap="round"/>
+
+                                <!-- Volumen de la palma -->
+                                <ellipse cx="103" cy="151" rx="45" ry="51" fill="#FFF7F2" opacity=".10"/>
+                                <ellipse cx="${isLeft ? 56 : 150}" cy="151" rx="13" ry="27" fill="#A65E4B" opacity=".08"/>
+                            </g>
+
+                            <!-- Nudillos de dedos doblados -->
+                            <g class="hand-folded-knuckles">${foldedKnucklesHTML}</g>
+                        </svg>
+                    </div>
+                `;
+            }
+
+            const group2Wrapper = document.getElementById('group2-wrapper');
+            const opBadge = document.getElementById('visual-op-badge');
+
+            if (currentOp === '+') {
+                group2Wrapper.classList.remove('hidden');
+                opBadge.classList.remove('hidden');
+
+                const leftStates = [false, false, false, false, false];
+                for (let i = 0; i < currentN1; i++) leftStates[4 - i] = true;
+
+                const rightStates = [false, false, false, false, false];
+                for (let i = 0; i < currentN2; i++) rightStates[i] = true;
+
+                c1.innerHTML = generateRealisticHandSVG(true, leftStates, 'left');
+                c2.innerHTML = generateRealisticHandSVG(false, rightStates, 'right');
+
+                leftStates.forEach((isUp, idx) => {
+                    const el = document.getElementById(`left-svg-finger-${idx}`);
+                    if (el && isUp) {
+                        el.onclick = (e) => {
+                            e.stopPropagation();
+                            playCountSound(5 - idx);
+                            el.classList.add('scale-105');
+                            setTimeout(() => el.classList.remove('scale-105'), 250);
+                        };
+                    }
+                });
+
+                rightStates.forEach((isUp, idx) => {
+                    const el = document.getElementById(`right-svg-finger-${idx}`);
+                    if (el && isUp) {
+                        el.onclick = (e) => {
+                            e.stopPropagation();
+                            playCountSound(idx + 1);
+                            el.classList.add('scale-105');
+                            setTimeout(() => el.classList.remove('scale-105'), 250);
+                        };
+                    }
+                });
+
+            } else {
+                const leftCount = Math.min(currentN1, 5);
+                const rightCount = currentN1 > 5 ? currentN1 - 5 : 0;
+
+                const leftStates = [false, false, false, false, false];
+                for (let i = 0; i < leftCount; i++) leftStates[4 - i] = true;
+
+                c1.innerHTML = generateRealisticHandSVG(true, leftStates, 'left');
+
+                leftStates.forEach((isUp, idx) => {
+                    const el = document.getElementById(`left-svg-finger-${idx}`);
+                    const knuckle = document.getElementById(`left-knuckle-${idx}`);
+                    if (el && isUp) {
+                        const fingerNum = 5 - idx;
+                        const handleTap = (e) => {
+                            e.stopPropagation();
+                            toggleSubtractionFinger(el, knuckle, fingerNum);
+                        };
+                        el.onclick = handleTap;
+                        if (knuckle) knuckle.onclick = handleTap;
+                    }
+                });
+
+                if (rightCount > 0) {
+                    group2Wrapper.classList.remove('hidden');
+                    opBadge.classList.add('hidden');
+
+                    const rightStates = [false, false, false, false, false];
+                    for (let i = 0; i < rightCount; i++) rightStates[i] = true;
+
+                    c2.innerHTML = generateRealisticHandSVG(false, rightStates, 'right');
+
+                    rightStates.forEach((isUp, idx) => {
+                        const el = document.getElementById(`right-svg-finger-${idx}`);
+                        const knuckle = document.getElementById(`right-knuckle-${idx}`);
+                        if (el && isUp) {
+                            const fingerNum = leftCount + idx + 1;
+                            const handleTap = (e) => {
+                                e.stopPropagation();
+                                toggleSubtractionFinger(el, knuckle, fingerNum);
+                            };
+                            el.onclick = handleTap;
+                            if (knuckle) knuckle.onclick = handleTap;
+                        }
+                    });
+                } else {
+                    group2Wrapper.classList.add('hidden');
+                    opBadge.classList.add('hidden');
+                    c2.innerHTML = '';
+                }
+            }
+        }
+
+        function toggleSubtractionFinger(fingerEl, knuckleEl, fingerNum) {
+            if (!fingerEl) return;
+            const step = fingerEl.dataset.step || 'normal';
+
+            // Una vez que ya se han doblado los dedos que había que restar,
+            // los dedos restantes pasan a ser SOLO de conteo. Tocarlos nunca
+            // debe doblarlos: se mantienen levantados para poder contar el resultado.
+            const countingRemainingOnly = removedItemsCount >= currentN2;
+
+            if (countingRemainingOnly && step !== 'folded') {
+                fingerEl.dataset.step = 'counted';
+                fingerEl.classList.add('finger-counted');
+                fingerEl.classList.add('finger-up');
+                fingerEl.classList.remove('finger-down');
+                playCountSound(fingerNum || 1);
+                updateMascot(`¡Muy bien! Este dedito se queda levantado. Cuenta los que quedan.`, '🌟');
+                return;
+            }
+
+            if (step === 'normal') {
+                // PRIMER TOQUE: Contar (brillo verde, nota musical, NO se dobla)
+                fingerEl.dataset.step = 'counted';
+                fingerEl.classList.add('finger-counted');
+                playCountSound(fingerNum || 1);
+                updateMascot(`¡Dedito contado! Tócalo otra vez para doblarlo y hacer la resta.`, '✨');
+            } else if (step === 'counted') {
+                // SEGUNDO TOQUE: Doblar hacia la palma.
+                fingerEl.dataset.step = 'folded';
+                fingerEl.classList.remove('finger-counted');
+                fingerEl.classList.add('finger-down');
+                fingerEl.classList.remove('finger-up');
+                if (knuckleEl) {
+                    knuckleEl.classList.add('show');
+                    knuckleEl.classList.remove('hide');
+                }
+                removedItemsCount++;
+                playDisappearSound();
+
+                const remainingToSubtract = currentN2 - removedItemsCount;
+                if (remainingToSubtract > 0) {
+                    updateMascot(`Has doblado ${removedItemsCount} dedito(s). Faltan doblar ${remainingToSubtract} para restar ${currentN2}.`, '🐻');
+                } else if (remainingToSubtract === 0) {
+                    updateMascot(`¡Has doblado los ${currentN2} deditos! Ahora toca los dedos que quedan levantados para contarlos.`, '🌟');
+                } else {
+                    updateMascot(`Has doblado ${removedItemsCount} deditos. Toca uno doblado para desdoblarlo si quieres corregir.`, '🤔');
+                }
+            } else {
+                // TERCER TOQUE: Desdoblar (solo permitido mientras todavía
+                // estamos corrigiendo la cantidad que se resta).
+                if (removedItemsCount >= currentN2) return;
+                fingerEl.dataset.step = 'normal';
+                fingerEl.classList.add('finger-up');
+                fingerEl.classList.remove('finger-down');
+                if (knuckleEl) {
+                    knuckleEl.classList.add('hide');
+                    knuckleEl.classList.remove('show');
+                }
+                removedItemsCount--;
+                playReappearSound();
+                updateMascot(`Dedito desdoblado. ¡Puedes volver a contarlo o doblarlo!`, '🖐️');
+            }
+        }
+
+        function renderItemsGroup(c1, c2) {
+            c1.innerHTML = '';
+            c2.innerHTML = '';
+            const group2Wrapper = document.getElementById('group2-wrapper');
+            const opBadge = document.getElementById('visual-op-badge');
+
+            const sprites = themeSprites[currentTheme] || themeSprites.faces;
+
+            if (currentOp === '+') {
+                group2Wrapper.classList.remove('hidden');
+                opBadge.classList.remove('hidden');
+
+                for (let i = 0; i < currentN1; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'item-card w-16 h-16 md:w-20 md:h-20 bg-white border-3 border-orange-200 rounded-2xl flex flex-col items-center justify-center text-3xl md:text-4xl shadow-md relative';
+                    item.innerHTML = `<span>${sprites[i % sprites.length]}</span>`;
+                    item.onclick = function() {
+                        playCountSound(i + 1);
+                        item.classList.add('counted');
+                        setTimeout(() => item.classList.remove('counted'), 300);
+                    };
+                    c1.appendChild(item);
+                }
+
+                for (let i = 0; i < currentN2; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'item-card w-16 h-16 md:w-20 md:h-20 bg-white border-3 border-teal-200 rounded-2xl flex flex-col items-center justify-center text-3xl md:text-4xl shadow-md relative';
+                    item.innerHTML = `<span>${sprites[(i + currentN1) % sprites.length]}</span>`;
+                    item.onclick = function() {
+                        playCountSound(currentN1 + i + 1);
+                        item.classList.add('counted');
+                        setTimeout(() => item.classList.remove('counted'), 300);
+                    };
+                    c2.appendChild(item);
+                }
+            } else {
+                opBadge.classList.add('hidden');
+                const leftCount = Math.min(currentN1, 5);
+                const rightCount = currentN1 > 5 ? currentN1 - 5 : 0;
+
+                for (let i = 0; i < leftCount; i++) {
+                    const item = document.createElement('div');
+                    item.dataset.step = "normal";
+                    item.className = 'item-card w-16 h-16 md:w-20 md:h-20 bg-white border-3 border-orange-200 rounded-2xl flex flex-col items-center justify-center text-3xl md:text-4xl shadow-md relative';
+                    item.innerHTML = `<span>${sprites[i % sprites.length]}</span>`;
+                    item.onclick = () => toggleSubtractionItem(item, i + 1);
+                    c1.appendChild(item);
+                }
+
+                if (rightCount > 0) {
+                    group2Wrapper.classList.remove('hidden');
+                    for (let i = 0; i < rightCount; i++) {
+                        const item = document.createElement('div');
+                        item.dataset.step = "normal";
+                        item.className = 'item-card w-16 h-16 md:w-20 md:h-20 bg-white border-3 border-teal-200 rounded-2xl flex flex-col items-center justify-center text-3xl md:text-4xl shadow-md relative';
+                        item.innerHTML = `<span>${sprites[(i + leftCount) % sprites.length]}</span>`;
+                        item.onclick = () => toggleSubtractionItem(item, leftCount + i + 1);
+                        c2.appendChild(item);
+                    }
+                } else {
+                    group2Wrapper.classList.add('hidden');
+                }
+            }
+        }
+
+        function toggleSubtractionItem(itemEl, itemNum) {
+            if (!itemEl) return;
+            const step = itemEl.dataset.step || 'normal';
+
+            if (step === 'normal') {
+                itemEl.dataset.step = 'counted';
+                itemEl.classList.add('counted');
+                playCountSound(itemNum || 1);
+                updateMascot(`¡Amiguito contado! Tócalo de nuevo si quieres quitarlo.`, '✨');
+            } else if (step === 'counted') {
+                itemEl.dataset.step = 'folded';
+                itemEl.classList.remove('counted');
+                itemEl.classList.add('disappearing');
+                removedItemsCount++;
+                playDisappearSound();
+
+                const remaining = currentN2 - removedItemsCount;
+                if (remaining > 0) {
+                    updateMascot(`Has quitado ${removedItemsCount}. Faltan quitar ${remaining} para restar ${currentN2}.`, '🐻');
+                } else if (remaining === 0) {
+                    updateMascot(`¡Has quitado los ${currentN2} amiguitos! Cuenta cuántos quedan.`, '🌟');
+                } else {
+                    updateMascot(`Has quitado ${removedItemsCount} amiguitos. Toca uno para traerlo de vuelta.`, '🤔');
+                }
+            } else {
+                itemEl.dataset.step = 'normal';
+                itemEl.classList.remove('disappearing');
+                removedItemsCount--;
+                playReappearSound();
+                updateMascot(`Amiguito traído de vuelta.`, '🌟');
+            }
+        }
+
+        function renderOptionButtons() {
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            const options = buildPedagogicalDistractors(currentAnswer).sort((a, b) => a - b);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.setAttribute('aria-label', `Responder ${opt}`);
+                btn.className = 'w-16 h-16 md:w-20 md:h-20 bg-amber-100 hover:bg-amber-200 border-4 border-amber-300 rounded-2xl font-bold text-3xl md:text-4xl text-amber-900 shadow-md btn-bounce transition-all flex items-center justify-center';
+                btn.innerText = opt;
+                btn.addEventListener('click', () => checkAnswer(opt, btn));
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedNum, buttonEl) {
+            if (isAnswered) return;
+
+            if (selectedNum === currentAnswer) {
+                isAnswered = true;
+                recordAnswer(true);
+                playSuccessSound();
+                createBalloons();
+                vibrate([30, 40, 60]);
+
+                document.getElementById('target-symbol').innerText = currentAnswer;
+                document.getElementById('vert-target-symbol').innerText = currentAnswer;
+
+                buttonEl.classList.remove('bg-amber-100', 'border-amber-300');
+                buttonEl.classList.add('bg-emerald-400', 'border-emerald-500', 'text-white', 'answer-correct');
+                updateMascot(`¡Correcto! ${currentN1} ${currentOp === '+' ? 'más' : 'menos'} ${currentN2} es ${currentAnswer}.`, '🌟');
+                showHint(`¡Muy bien! Has encontrado el resultado: ${currentAnswer}.`, 'green');
+                speak(`¡Muy bien! ${currentN1} ${currentOp === '+' ? 'más' : 'menos'} ${currentN2} es ${currentAnswer}.`);
+
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-next').classList.add('flex');
+            } else {
+                recordAnswer(false);
+                playTone(150, 'sawtooth', 0.2);
+                vibrate(30);
+                buttonEl.classList.add('opacity-40', 'answer-wrong');
+                lastWrongAnswers.add(selectedNum);
+                currentHintStage = Math.min(2, currentHintStage + 1);
+
+                const remaining = currentOp === '+' ? currentAnswer : currentAnswer;
+                if (currentHintStage === 1) {
+                    showHint(`Pista: cuenta los dedos despacio. Empieza por ${currentN1} y ${currentOp === '+' ? 'añade' : 'quita'} ${currentN2}.`);
+                    updateMascot('Casi. Vamos paso a paso. ¡Tú puedes!', '🤔');
+                } else {
+                    showHint(currentOp === '+'
+                        ? `Cuenta desde ${currentN1}: ${Array.from({length: currentN2}, (_, i) => currentN1 + i + 1).join(' → ')}.`
+                        : `Empieza en ${currentN1} y retrocede ${currentN2}: ${Array.from({length: currentN2}, (_, i) => currentN1 - i - 1).join(' → ')}.`);
+                    updateMascot('Mira las manos y cuenta conmigo.', '💡');
+                }
+            }
+        }
+
+        function nextExercise() {
+            if (currentMode === 'free') {
+                buildFreeExercise();
+            } else {
+                generateRandomExercise();
+            }
+        }
+
+        function createBalloons() {
+            const emojis = ['🎈', '⭐', '🎉', '🍎', '🎶', '🖐️'];
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const balloon = document.createElement('div');
+                    balloon.className = 'balloon';
+                    balloon.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    balloon.style.left = Math.random() * 80 + 10 + 'vw';
+                    balloon.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                    document.body.appendChild(balloon);
+
+                    setTimeout(() => balloon.remove(), 4000);
+                }, i * 150);
+            }
+        }
+
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !isAnswered) {
+                const first = document.querySelector('#options-container button:not(.opacity-40)');
+                if (first) first.focus();
+            }
+            if (e.key === ' ' && document.activeElement?.tagName === 'BUTTON') {
+                // El comportamiento nativo del botón se mantiene.
+            }
+            if (e.key.toLowerCase() === 'v' && !e.ctrlKey && !e.metaKey) announceExercise();
+        });
+
+        // Initialize application on load
+        window.onload = function() {
+            updateProgressUI();
+            switchMode('home');
+        };
+    </script>
+</body>
+</html>
